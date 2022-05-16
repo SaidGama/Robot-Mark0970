@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> CAMARA STREAM </title>
+</head>
+   <body>
+      <img id='live' alt='video' src=' '>
+      <br>
+      <br>
+      <button onclick='accion(0)'>PRENDER FLASH</button>
+      <button onclick='accion(1)'>APAGAR FLASH</button>
+      <br>
+      <br>
+      <button onclick='accion(2)'>PRENDER CAMARA </button>
+      <button onclick='accion(3)'>APAGAR CAMARA</button>
+   </body>
+</html>
+<script>
+    //const socket = new WebSocket('ws://34.125.23.175:3000');
+    //const socket2 = new WebSocket('ws://34.125.23.175:3000');
+    const socket = new WebSocket('ws://localhost:3000/socket1');
+    const socket2 = new WebSocket('ws://localhost:3000/socket2');
+
+    socket.addEventListener('message', function (event) {
+        var img = document.getElementById('live');
+        img.src = 'data:image/jpg;base64,' + (event.data) ;
+    });
+
+    function accion(dato){
+        if(dato==0){
+            socket2.send('prender');
+        }else if(dato==1){
+            socket2.send('apagar');
+        }else if(dato==2){
+            socket2.send('camaraon');
+        }else if(dato==3){
+            socket2.send('camaraoff');
+        }
+    }
+</script>
