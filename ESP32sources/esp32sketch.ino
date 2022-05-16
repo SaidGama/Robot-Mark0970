@@ -1,6 +1,6 @@
 #include <WebSocketsClient.h>
 #include <WiFi.h>
-#include "CamDriver.h"
+#include "CamDriver.hpp"
 
 #define FLASH      4
 
