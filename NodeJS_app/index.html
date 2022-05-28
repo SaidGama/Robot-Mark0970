@@ -17,13 +17,10 @@
       <button onclick='accion(2)'>PRENDER CAMARA </button>
       <button onclick='accion(3)'>APAGAR CAMARA</button>
    </body>
-</html>
-<script>
-    //const socket = new WebSocket('ws://34.125.23.175:3000');
-    //const socket2 = new WebSocket('ws://34.125.23.175:3000');
+   <script>
+    
     const socket = new WebSocket('ws://localhost:3000/socket1');
     const socket2 = new WebSocket('ws://localhost:3000/socket2');
-
     socket.addEventListener('message', function (event) {
         var img = document.getElementById('live');
         img.src = 'data:image/jpg;base64,' + (event.data) ;
@@ -41,3 +38,4 @@
         }
     }
 </script>
+</html>
