@@ -8,14 +8,17 @@ WebSocketsClient ws1;
 WebSocketsClient ws2;
 
 bool connected = false;
+bool flag = false;
+
+unsigned long lastTime = 0;
+unsigned long timerDelay = 30000;
 
 void ws1Event(WStype_t type, uint8_t * payload, size_t length) {
     switch(type) {
         case WStype_DISCONNECTED:
-            Serial.printf("\nDisconnected");
+            Serial.printf("\nSocket 1 desconectado");
             break;
         case WStype_CONNECTED:
-            connected = true;
             Serial.println("\nSocket 1 conectado");
             break;
         case WStype_TEXT:
@@ -31,24 +34,13 @@ void ws1Event(WStype_t type, uint8_t * payload, size_t length) {
 void ws2Event(WStype_t type, uint8_t * payload, size_t length) {
     switch(type) {
         case WStype_DISCONNECTED:
-            Serial.printf("\nDisconnected");
+            Serial.printf("\nSocket 2 desconectado");
             break;
         case WStype_CONNECTED:
-            connected = true;
             Serial.println("\nSocket 2 conectado");
             break;
         case WStype_TEXT:{
-              char * sptr = NULL;
-              int mensaje = strtol((char *)payload, &sptr, 10);
-              if(strcmp(sptr,"prender") == 0){
-                prenderLed(1);
-              }else if(strcmp(sptr,"apagar") == 0){
-                prenderLed(0);
-              }else if(strcmp(sptr,"camaraon") == 0){
-                connected=true;
-              }else if(strcmp(sptr,"camaraoff") == 0){
-                connected=false;
-              }
+              recv_message(payload);
             break;  
         }  
         case WStype_BIN:
@@ -59,6 +51,21 @@ void ws2Event(WStype_t type, uint8_t * payload, size_t length) {
         case WStype_FRAGMENT_FIN:
             break;
     }
+}
+void recv_message(uint8_t * payload)
+{
+  ws2.loop();
+  String message;
+  message = String((char *)payload);
+  if(message == "prender"){
+        prenderLed(1);
+  }else if(message == "apagar") {
+        prenderLed(0);
+  }else if(message == "camaraon"){
+        connected=true;
+  }else if(message == "camaraoff"){
+        connected=false;
+  }
 }
 
 void liveCam(){
@@ -84,6 +91,8 @@ void prenderLed(int valor){
 void setup() {
   Serial.begin(115200);
   pinMode(FLASH,OUTPUT);
+  btStop();
+  setCpuFrequencyMhz(80);
   configCamera();
   WiFi.begin("Totalplay-F39E", "F39E15E7MBuWtB5A");
   //WiFi.begin("Pixel3", "12345678");
@@ -95,12 +104,21 @@ void setup() {
   Serial.println("Wifi conectado");
   String IP = WiFi.localIP().toString();
   Serial.print("IP address: " + IP);
-  //webSocket.begin("34.125.157.251", 3000, "/");
-  ws1.begin("192.168.100.9", 3000, "/socket1");
+
+  //ws1.beginSSL("mark0970-server.herokuapp.com", 443, "/socket1");
+  //ws2.beginSSL("mark0970-server.herokuapp.com", 443,"/socket2");
+
+  //ws1.begin("192.168.100.9", 3000, "/socket1");
+  //ws2.begin("192.168.100.9", 3000, "/socket2");
+
+  ws1.begin("34.125.55.148", 3000, "/socket1");
+  ws2.begin("34.125.55.148", 3000, "/socket2");
+  
   ws1.onEvent(ws1Event);
-  //ws2.begin("34.125.157.251", 3000, "/");
-  ws2.begin("192.168.100.9", 3000, "/socket2");
   ws2.onEvent(ws2Event);
+
+  ws1.setReconnectInterval(500);
+  ws2.setReconnectInterval(500);
 }
 
 void loop() {
@@ -108,5 +126,10 @@ void loop() {
   ws2.loop();
   if(connected == true){
     liveCam();
+  }
+  if( (millis()-lastTime) > timerDelay ){
+    ws1.sendPing();
+    ws2.sendPing();
+    lastTime = millis();
   }
 }
